@@ -107,25 +107,42 @@ from keras.models import Model
 import keras.backend as K
 from keras.optimizers import Adam
 
-bert_model = load_trained_model_from_checkpoint(config_path, checkpoint_path, seq_len=None)
+def build_bert():
+    bert_model = load_trained_model_from_checkpoint(config_path, checkpoint_path, seq_len=None)
 
-for l in bert_model.layers:
-    l.trainable = True
+    for l in bert_model.layers:
+        l.trainable = True
 
-x1_in = Input(shape=(None,))
-x2_in = Input(shape=(None,))
+    x1_in = Input(shape=(None,))
+    x2_in = Input(shape=(None,))
 
-x = bert_model([x1_in, x2_in])
-x = Lambda(lambda x: x[:, 0])(x)
-p = Dense(1, activation='sigmoid')(x)
+    x = bert_model([x1_in, x2_in])
+    x = Lambda(lambda x: x[:, 0])(x)
+    p = Dense(1, activation='sigmoid')(x)
+    # p = Dense(nclass, activation='softmax')(x) #多分类
 
-model = Model([x1_in, x2_in], p)
-model.compile(
-    loss='binary_crossentropy',  # 二分类
-    optimizer=Adam(1e-5),  # 用足够小的学习率
-    metrics=['accuracy']
-)
-model.summary()
+    model = Model([x1_in, x2_in], p)
+    model.compile(loss='binary_crossentropy',
+                  optimizer=Adam(1e-5),
+                  metrics=['accuracy'])
+    print(model.summary())
+    return model
+model = build_bert()
+# bert_model = load_trained_model_from_checkpoint(config_path, checkpoint_path, seq_len=None)
+# for l in bert_model.layers:
+#     l.trainable = True
+# x1_in = Input(shape=(None,))
+# x2_in = Input(shape=(None,))
+# x = bert_model([x1_in, x2_in])
+# x = Lambda(lambda x: x[:, 0])(x)
+# p = Dense(1, activation='sigmoid')(x)
+# model = Model([x1_in, x2_in], p)
+# model.compile(
+#     loss='binary_crossentropy',  # 二分类
+#     optimizer=Adam(1e-5),  # 用足够小的学习率
+#     metrics=['accuracy']
+# )
+# model.summary()
 
 train_D = data_generator(train_data)
 valid_D = data_generator(valid_data)
